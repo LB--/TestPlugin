@@ -1,0 +1,7 @@
+
+name: "TestPlugin"
+main: com.lb_stuff.testplugin.TestPluginPlugin
+version: ${project.version}
+authors:
+  - "Nicholas \"LB\" Braden"
+description: "Just testing."
