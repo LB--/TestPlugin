@@ -65,6 +65,7 @@ public class TestPluginPlugin extends JavaPlugin implements Listener
 			try
 			{
 				m = start.getDeclaredMethod(name, argtypes);
+				break;
 			}
 			catch(NoSuchMethodException e)
 			{
@@ -93,6 +94,7 @@ public class TestPluginPlugin extends JavaPlugin implements Listener
 			try
 			{
 				f = start.getDeclaredField(name);
+				break;
 			}
 			catch(NoSuchFieldException e)
 			{
