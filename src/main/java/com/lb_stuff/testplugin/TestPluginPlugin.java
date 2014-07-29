@@ -196,6 +196,10 @@ public class TestPluginPlugin extends JavaPlugin implements Listener
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onDamage(EntityDamageEvent e)
 	{
+		if(e instanceof Player)
+		{
+			return;
+		}
 		for(Player p : Bukkit.getServer().getOnlinePlayers())
 		{
 			if(!p.getUniqueId().equals(e.getEntity().getUniqueId()))
