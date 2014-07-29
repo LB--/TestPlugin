@@ -6,6 +6,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -32,6 +33,7 @@ public class TestPluginPlugin extends JavaPlugin implements Listener
 		}
 	}
 
+	private static Class<?> NMS_CombatTracker = null;
 	private static Class<?> NMS_DamageSource = null;
 	private static Class<?> NMS_Explosion = null;
 	private static Class<?> NMS_Entity = null;
@@ -44,6 +46,7 @@ public class TestPluginPlugin extends JavaPlugin implements Listener
 	{
 		getServer().getPluginManager().registerEvents(this, this);
 
+		NMS_CombatTracker  = findClass("net.minecraft.server.v1_7_R4.CombatTracker");
 		NMS_DamageSource   = findClass("net.minecraft.server.v1_7_R4.DamageSource");
 		NMS_Explosion      = findClass("net.minecraft.server.v1_7_R4.Explosion");
 		NMS_Entity         = findClass("net.minecraft.server.v1_7_R4.Entity");
@@ -127,6 +130,17 @@ public class TestPluginPlugin extends JavaPlugin implements Listener
 		Method m = findMethod(handle.getClass(), "damageEntity", NMS_DamageSource, Float.TYPE);
 		return (Boolean)invokeMethod(m, handle, damagesource, f);
 	}
+	private static void setLastDamage(Entity e, Object damagesource, float f, float f1)
+	{
+		Object handle = getHandle(e);
+		Object combattracker = invokeMethod(findMethod(handle.getClass(), "aW"), handle);
+		invokeMethod(findMethod(combattracker.getClass(), "a", NMS_DamageSource, Float.TYPE, Float.TYPE), combattracker, damagesource, f, f1);
+	}
+	private static void killEntity(Entity e, Object damagesource)
+	{
+		Object handle = getHandle(e);
+		invokeMethod(findMethod(handle.getClass(), "die", NMS_DamageSource), handle, damagesource);
+	}
 	private static Object damageSource(String name, Class<?>[] clazzes, Object... args)
 	{
 		return invokeMethod(findMethod(NMS_DamageSource, name, clazzes), null, args);
@@ -204,10 +218,28 @@ public class TestPluginPlugin extends JavaPlugin implements Listener
 		}
 		for(Player p : Bukkit.getServer().getOnlinePlayers())
 		{
+			if(p.isDead())
+			{
+				continue;
+			}
 			if(!p.getUniqueId().equals(e.getEntity().getUniqueId()))
 			{
-				damageEntity(p, damageSourceFromCause(e), (float)e.getDamage());
+				Object damagecause = damageSourceFromCause(e);
+				//damageEntity(p, damagecause, (float)e.getDamage());
+				setLastDamage(p, damagecause, (float)p.getHealth(), (float)p.getHealth());
+				//killEntity(p, damagecause);
+				p.setHealth(0.0);
 			}
 		}
+	}
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onDamage(EntityDamageByEntityEvent e)
+	{
+		onDamage((EntityDamageEvent)e);
+	}
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onDamage(EntityDamageByBlockEvent e)
+	{
+		onDamage((EntityDamageEvent)e);
 	}
 }
